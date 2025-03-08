@@ -1,0 +1,28 @@
+#include <Wire.h>
+#include <Adafruit_SSD1306.h>
+
+#define SCREEN_ADDRESS 0x3C  
+
+Adafruit_SSD1306 display(128, 64, &Wire, -1);
+
+void setup() {
+    display.begin(SSD1306_SWITCHCAPVCC, SCREEN_ADDRESS);
+    display.clearDisplay();
+}
+
+void loop() {
+    static int contador = 0;  // Variable estática para contar
+    
+    display.clearDisplay();
+    display.setTextSize(2);
+    display.setTextColor(SSD1306_WHITE);
+    
+    display.setCursor(10, 10);
+    display.print("Hola Mundo");
+
+    display.setCursor(40, 40);
+    display.print(contador++);
+
+    display.display();
+    delay(1000);
+}
