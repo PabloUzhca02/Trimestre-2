@@ -1,0 +1,43 @@
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+#include <SD.h>
+
+#define TFT_CS    5  
+#define TFT_RST   22 
+#define TFT_A0    21 
+#define SD_CS     15 
+
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_A0, TFT_RST);
+
+void setup() {
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);
+  
+  if (!SD.begin(SD_CS)) {
+    while (1); // Si la SD falla, se detiene
+  }
+
+  File bmpFile = SD.open("/imagen.bmp");
+  if (!bmpFile) {
+    while (1); // Si la imagen no existe, se detiene
+  }
+
+  bmpFile.seek(54); // Saltar la cabecera BMP
+  uint8_t sdbuffer[3 * 128];  
+  uint16_t rowBuffer[128]; 
+
+  for (int y = 159; y >= 0; y--) {  
+    bmpFile.read(sdbuffer, sizeof(sdbuffer));
+    uint8_t *bufptr = sdbuffer;
+    for (int x = 0; x < 128; x++) {
+      rowBuffer[x] = tft.color565(bufptr[2], bufptr[1], bufptr[0]);
+      bufptr += 3;
+    }
+    tft.drawRGBBitmap(0, y, rowBuffer, 128, 1);
+  }
+
+  bmpFile.close();
+}
+
+void loop() {}
