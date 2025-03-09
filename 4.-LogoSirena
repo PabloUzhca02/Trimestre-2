@@ -18,7 +18,7 @@ void setup() {
     while (1); // Si la SD falla, se detiene
   }
 
-  \\Nombre de imagen tarea
+  //Nombre de imagen tarea
   File bmpFile = SD.open("/tarea.bmp");
   if (!bmpFile) {
     while (1); // Si la imagen no existe, se detiene
