@@ -1,0 +1,42 @@
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+#include <SD.h>
+
+// Pines definidos para el ESP32
+#define TFT_CS    5  
+#define TFT_RST   22 
+#define TFT_A0    21 
+#define SD_CS     15  
+
+// Configuración de la pantalla TFT
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_A0, TFT_RST);
+
+void setup() {
+  // Inicializar pantalla TFT
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1);
+  tft.fillScreen(ST77XX_BLACK);
+
+  // Inicializar tarjeta SD
+  if (!SD.begin(SD_CS)) {
+    while (1);  // Si no se puede inicializar, detiene el programa.
+  }
+}
+
+void loop() {
+  // Mostrar imágenes desde la tarjeta SD en la posición (14,0)
+  mostrarImagen("/imagen1.bmp", 14, 0);
+  delay(3000); // Esperar 3 segundos
+  mostrarImagen("/imagen2.bmp", 14, 0);
+  delay(3000); // Esperar 3 segundos
+}
+
+// Función para mostrar una imagen BMP (en este caso usando la función 'drawBitmap')
+void mostrarImagen(const char *filename, int16_t x, int16_t y) {
+  File file = SD.open(filename);
+  if (!file) return;  // Si no se puede abrir el archivo, salimos de la función
+
+  // Solo cargamos y mostramos la imagen si es un BMP válido
+  tft.drawBitmap(x, y, file, tft.width(), tft.height(), ST77XX_WHITE);
+  file.close();
+}
