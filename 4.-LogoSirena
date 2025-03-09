@@ -3,42 +3,43 @@
 #include <SPI.h>
 #include <SD.h>
 
-#define TFT_CS    5  
-#define TFT_RST   22 
-#define TFT_A0    21 
-#define SD_CS     15 
+#define TFT_CS    5  // Chip select de pantalla TFT
+#define TFT_RST   22 // Reset de pantalla TFT
+#define TFT_A0    21 // Datos/Comandos de pantalla TFT
+#define SD_CS     15 // Chip select de la tarjeta SD
 
 Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_A0, TFT_RST);
 
 void setup() {
+  Serial.begin(115200);
   tft.initR(INITR_BLACKTAB);
   tft.setRotation(1);
-  
+  tft.fillScreen(ST77XX_BLACK);
+
   if (!SD.begin(SD_CS)) {
-    while (1); // Si la SD falla, se detiene
+    Serial.println("Error en tarjeta SD");
+    while (1);
   }
 
-  //Nombre de imagen tarea
-  File bmpFile = SD.open("/tarea.bmp");
-  if (!bmpFile) {
-    while (1); // Si la imagen no existe, se detiene
-  }
-
-  bmpFile.seek(54); // Saltar la cabecera BMP
-  uint8_t sdbuffer[3 * 128];  
-  uint16_t rowBuffer[128]; 
-
-  for (int y = 159; y >= 0; y--) {  
-    bmpFile.read(sdbuffer, sizeof(sdbuffer));
-    uint8_t *bufptr = sdbuffer;
-    for (int x = 0; x < 128; x++) {
-      rowBuffer[x] = tft.color565(bufptr[2], bufptr[1], bufptr[0]);
-      bufptr += 3;
-    }
-    tft.drawRGBBitmap(0, y, rowBuffer, 128, 1);
-  }
-
-  bmpFile.close();
+  mostrarBMP("/tarea.bmp", 14, 0);
 }
 
 void loop() {}
+
+void mostrarBMP(const char *filename, int16_t x, int16_t y) {
+  File bmpFile = SD.open(filename);
+  if (!bmpFile) return;
+  bmpFile.seek(54);  // Saltar la cabecera BMP
+
+  uint8_t sdbuffer[384];
+  for (int row = 127; row >= 0; row--) {
+    bmpFile.read(sdbuffer, sizeof(sdbuffer));
+    uint16_t buffer[128];
+    for (int col = 0; col < 128; col++) {
+      int idx = col * 3;
+      buffer[col] = tft.color565(sdbuffer[idx + 2], sdbuffer[idx + 1], sdbuffer[idx]);
+    }
+    tft.drawRGBBitmap(x, y + row, buffer, 128, 1);
+  }
+  bmpFile.close();
+}
